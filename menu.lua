@@ -8,8 +8,7 @@ local scene = composer.newScene()
 -- -----------------------------------------------------------------------------------
 
 local function gotoGame()
-	composer.removeScene("scene2")
-	composer.gotoScene ("scene2", { time = 800, effect = "crossfade"} )
+	composer.gotoScene ("game", { time = 800, effect = "fade"} )
 end
 
 
