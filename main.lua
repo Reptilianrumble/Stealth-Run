@@ -16,4 +16,4 @@ local composer = require "composer"
 -- Add any system wide event handlers, location, key events, system resume/suspend, memory, etc.
 math.randomseed (os.time())
 -- load scene1
-composer.gotoScene( "scene1" )
+composer.gotoScene( "menu" )
