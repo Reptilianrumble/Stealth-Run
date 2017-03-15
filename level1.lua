@@ -17,8 +17,6 @@ local physics = require "physics"
 local screenW, screenH, halfW = display.actualContentWidth, display.actualContentHeight, display.contentCenterX
 local hero = {}
 
-
-
 local function setHeroProperties ()
 -- Hero Properties 
 hero.speed = 70
@@ -36,12 +34,12 @@ local function doControlsTouch (event)
 	
 	if event.phase=="began" then
 		if buttonPressed.id == "Jump" then
-			print ("button Jump is down")
+			--print ("button Jump is down")
 			
 			hero:applyLinearImpulse (0,-40, hero.x, hero.y)
 		else 
 			Runtime:addEventListener ("enterFrame", setHeroVelocity)
-			print ("button pad is down")
+			--print ("button pad is down")
 			
 			local touchX = event.x
 			
@@ -58,13 +56,13 @@ local function doControlsTouch (event)
 		end 
 	elseif event.phase=="ended" then 
 		if buttonPressed.id == "Jump" then
-			print ("button Jump is up")
+			--print ("button Jump is up")
 			
 
 			Runtime:removeEventListener ("enterFrame", setHeroVelocity)
 			
 		else 
-			print ("button pad is up")
+			--print ("button pad is up")
 			hero.velocity = 0
 		end 
 		
@@ -93,13 +91,16 @@ function scene:create( event )
 	local background = display.newRect( display.screenOriginX, display.screenOriginY, screenW, screenH )
 	background.anchorX = 0 
 	background.anchorY = 0
-	background:setFillColor( .5 )
+	background:setFillColor( 1 )
 	
-	-- create the hero 
-	hero = display.newImageRect("hero.png", 160 ,60,64, 90 )
-	hero.x, hero.y = 160, 60
+	-- make a hero (off-screen), position it, and rotate slightly
+	hero = display.newImageRect( "Hero.png", 50, 50 )
+	hero.x, hero.y = 30, 212.5
+	hero.isFixedRotation = true
 	
-	-- create controls 
+	-- add physics to the hero
+	physics.addBody( hero, { density=1.0, friction=0.3, bounce=0.3 } )
+	
 	local controls = display.newRect(50, 290, 96, 32)
 	controls.id = "LeftRight"
 	controls:addEventListener("touch", doControlsTouch)
@@ -108,26 +109,81 @@ function scene:create( event )
 	btnJump.id = "Jump"
 	btnJump:addEventListener("touch", doControlsTouch)
 	
-	-- add physics to the hero
-	physics.addBody( hero, { density=1.0, friction=0.3, bounce=0 } )
-	setHeroProperties()
+	local enemy = display.newImageRect( "Enemy.png", 50, 50 )
+	enemy.x, enemy.y = 450, 212.5
 	
 	
-	-- create a grass object and add physics (with custom shape)
-	local grass = display.newImageRect( "grass.png", screenW, 82 )
-	grass.anchorX = 0
-	grass.anchorY = 1
-	--  draw the grass at the very bottom of the screen
-	grass.x, grass.y = display.screenOriginX, display.actualContentHeight + display.screenOriginY
+
+	physics.addBody( enemy, { density=1.0, friction=0.3, bounce=0.3 } )
+	enemy.isFixedRotation = true
+	
+	----------------------------------------adding enemy move loop here
+	local hello = true	
+	----------------------------------------
+	
+	
+	local wallLeft	= display.newImageRect( "BorderWall.png", 20, 3000 )
+	wallLeft.x, wallLeft.y = -50, 3000
+	wallLeft.anchorX = 0
+	wallLeft.anchorY = 1
+	
+	physics.addBody( wallLeft, "static", { density=5.0, friction=0.3, bounce=0.0 } )
+	wallLeft.isFixedRotation = true
+	
+	local wallRight = display.newImageRect( "BorderWall.png", 20, 3000 )
+	wallRight.x, wallRight.y = 510, 3000
+	wallRight.anchorX = 0
+	wallRight.anchorY = 1
+	
+	
+	physics.addBody( wallRight, "static", { density=5.0, friction=0.3, bounce=0.0 } )
+	wallRight.isFixedRotation = true
+	
+	local roof = display.newImageRect( "BorderWall.png", 3000, 20 )
+	roof.x, roof.y = -50, 20
+	roof.anchorX = 0
+	roof.anchorY = 1
+	
+	
+	physics.addBody( roof, "static", { density=5.0, friction=0.3, bounce=0.0 } )
+	roof.isFixedRotation = true
+	
+	local step1 = display.newImageRect( "Step.png", 30, 30 )
+	step1.x, step1.y = 200, 238
+	step1.anchorX = 0
+	step1.anchorY = 1
+	
+	physics.addBody( step1, "static", { density=5.0, friction=0.3, bounce=0.0 } )
+	step1.isFixedRotation = true
+	
+	local step2 = display.newImageRect( "Step.png", 30, 50 )
+	step2.x, step2.y = 230, 238
+	step2.anchorX = 0
+	step2.anchorY = 1
+	
+	physics.addBody( step2, "static", { density=5.0, friction=0.3, bounce=0.0 } )
+	step2.isFixedRotation = true
+	
+	-- create a ground object and add physics (with custom shape)
+	local ground = display.newImageRect( "floor.png", screenW, 82 )
+	ground.anchorX = 0
+	ground.anchorY = 1
+	--  draw the ground at the very bottom of the screen
+	ground.x, ground.y = display.screenOriginX, display.actualContentHeight + display.screenOriginY
 	
 	-- define a shape that's slightly shorter than image bounds (set draw mode to "hybrid" or "debug" to see)
-	local grassShape = { -halfW,-34, halfW,-34, halfW,34, -halfW,34 }
-	physics.addBody( grass, "static", { friction=0.3, shape=grassShape } )
+	local groundShape = { -halfW,-34, halfW,-34, halfW,34, -halfW,34 }
+	physics.addBody( ground, "static", { friction=0.3, shape=grassShape } )
 	
 	-- all display objects must be inserted into group
 	sceneGroup:insert( background )
-	sceneGroup:insert( grass)
+	sceneGroup:insert( ground)
 	sceneGroup:insert( hero )
+	sceneGroup:insert( wallLeft )
+	sceneGroup:insert( wallRight )
+	sceneGroup:insert( step1 )
+	sceneGroup:insert( step2 )
+	sceneGroup:insert( enemy )
 	sceneGroup:insert( controls )
 	sceneGroup:insert( btnJump )
 end
