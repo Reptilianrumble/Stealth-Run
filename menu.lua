@@ -8,7 +8,7 @@ local scene = composer.newScene()
 -- -----------------------------------------------------------------------------------
 
 local function gotoGame()
-	composer.gotoScene ("game", { time = 800, effect = "fade"} )
+	composer.gotoScene ("level1", { time = 800, effect = "fade"} )
 end
 
 
