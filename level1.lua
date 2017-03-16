@@ -45,12 +45,12 @@ local function doControlsTouch (event)
 			
 			if touchX < 50 then
 				-- move left 
-				hero.velocity = -hero.speed
+				hero.velocity = -70
 	
 			else 
 			
 				-- move right
-				hero.velocity = hero.speed
+				hero.velocity = 70
 				
 			end
 		end 
