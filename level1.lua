@@ -104,10 +104,13 @@ function scene:create( event )
 	local controls = display.newRect(50, 290, 96, 32)
 	controls.id = "LeftRight"
 	controls:addEventListener("touch", doControlsTouch)
+	local colorTable = { 1, 0, 0, 0.5 }
+	controls:setFillColor( unpack(colorTable) )
 	
 	local btnJump = display.newCircle (475,290,16)
 	btnJump.id = "Jump"
 	btnJump:addEventListener("touch", doControlsTouch)
+	btnJump:setFillColor( unpack(colorTable) )
 	
 	local enemy = display.newImageRect( "Enemy.png", 50, 50 )
 	enemy.x, enemy.y = 450, 212.5
