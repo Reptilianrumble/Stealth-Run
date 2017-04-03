@@ -19,55 +19,44 @@ local hero = {}
 
 local function setHeroProperties ()
 -- Hero Properties 
-hero.speed = 70
+hero.speed = 30
 
 end
 
 local function setHeroVelocity ()
-local heroHorizontalVelocity, heroVerticalVelocity = hero:getLinearVelocity()
+	heroHorizontalVelocity, heroVerticalVelocity = hero:getLinearVelocity()
 	hero:setLinearVelocity ( hero.velocity, heroVerticalVelocity)
 end
 
-local function doControlsTouch (event)
-
-	local buttonPressed = event.target
+local function onKeyEvent ( event )
 	
-	if event.phase=="began" then
-		if buttonPressed.id == "Jump" then
-			--print ("button Jump is down")
-			
-			hero:applyLinearImpulse (0,-40, hero.x, hero.y)
-		else 
-			Runtime:addEventListener ("enterFrame", setHeroVelocity)
-			--print ("button pad is down")
-			
-			local touchX = event.x
-			
-			if touchX < 50 then
-				-- move left 
-				hero.velocity = -70
-	
-			else 
-			
-				-- move right
-				hero.velocity = 70
-				
-			end
-		end 
-	elseif event.phase=="ended" then 
-		if buttonPressed.id == "Jump" then
-			--print ("button Jump is up")
-			
-
-			Runtime:removeEventListener ("enterFrame", setHeroVelocity)
-			
-		else 
-			--print ("button pad is up")
-			hero.velocity = 0
-		end 
+	if (event.keyName == "w" or event.keyName == "space" or event.keyName == "up") and heroVerticalVelocity == 0 then
+		Runtime:addEventListener ("enterFrame", setHeroVelocity)
+		hero:applyLinearImpulse (0,-20, hero.x, hero.y)
+	elseif event.keyName == "a" or event.keyName == "left" then
+		Runtime:addEventListener ("enterFrame", setHeroVelocity)
+		hero.velocity = -70
+		if (event.keyName == "a" or event.keyName == "left") and event.phase == "up" then
+		hero.velocity = hero.velocity + 70
+		Runtime:removeEventListener ("enterFrame", setHeroVelocity)
+		end
+	elseif event.keyName == "d" or event.keyName == "right" then
+		Runtime:addEventListener ("enterFrame", setHeroVelocity)
+		hero.velocity = 70
+		if (event.keyName ~= "a" or event.keyName ~= "left") and event.phase == "up" then
+		hero.velocity =  hero.velocity - 70
+		Runtime:removeEventListener ("enterFrame", setHeroVelocity)
+		end
+	elseif 	(event.keyName == "s" or event.keyName == "down") and heroVerticalVelocity ~= 0 then
+		Runtime:addEventListener ("enterFrame", setHeroVelocity)
+		heroVerticalVelocity = -0.01
+		hero:applyLinearImpulse (0,7.5, hero.x, hero.y)
 		
 	end
 end
+
+
+
 
 function scene:create( event )
 
@@ -96,21 +85,11 @@ function scene:create( event )
 	-- make a hero (off-screen), position it, and rotate slightly
 	hero = display.newImageRect( "Hero.png", 50, 50 )
 	hero.x, hero.y = 30, 212.5
-	hero.isFixedRotation = true
 	
 	-- add physics to the hero
-	physics.addBody( hero, { density=1.0, friction=0.3, bounce=0.3 } )
+	physics.addBody( hero, { density=1.0, wfriction=0.3, bounce=0.0 } )
+	hero.isFixedRotation = true
 	
-	local controls = display.newRect(50, 290, 96, 32)
-	controls.id = "LeftRight"
-	controls:addEventListener("touch", doControlsTouch)
-	local colorTable = { 1, 0, 0, 0.5 }
-	controls:setFillColor( unpack(colorTable) )
-	
-	local btnJump = display.newCircle (475,290,16)
-	btnJump.id = "Jump"
-	btnJump:addEventListener("touch", doControlsTouch)
-	btnJump:setFillColor( unpack(colorTable) )
 	
 	local enemy = display.newImageRect( "Enemy.png", 50, 50 )
 	enemy.x, enemy.y = 450, 212.5
@@ -187,8 +166,8 @@ function scene:create( event )
 	sceneGroup:insert( step1 )
 	sceneGroup:insert( step2 )
 	sceneGroup:insert( enemy )
-	sceneGroup:insert( controls )
-	sceneGroup:insert( btnJump )
+	--sceneGroup:insert( controls )
+	--sceneGroup:insert( btnJump )
 end
 
 
@@ -239,6 +218,8 @@ end
 ---------------------------------------------------------------------------------
 
 -- Listener setup
+
+Runtime:addEventListener( "key", onKeyEvent )
 scene:addEventListener( "create", scene )
 scene:addEventListener( "show", scene )
 scene:addEventListener( "hide", scene )
