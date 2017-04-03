@@ -83,7 +83,7 @@ function scene:create( event )
 	background:setFillColor( 1 )
 	
 	-- make a hero (off-screen), position it, and rotate slightly
-	hero = display.newImageRect( "Hero.png", 50, 50 )
+	hero = display.newImageRect( "stealth_run_character.png", 80, 80 )
 	hero.x, hero.y = 30, 212.5
 	
 	-- add physics to the hero
@@ -98,6 +98,9 @@ function scene:create( event )
 
 	physics.addBody( enemy, { density=1.0, friction=0.3, bounce=0.3 } )
 	enemy.isFixedRotation = true
+	
+	local HUD = display.newText("Score:" .. "    " .. "Time:", 20, 40, native.systemFont, 12 )
+	HUD:setFillColor ( 0, 0, 0)
 	
 	----------------------------------------adding enemy move loop here
 	local hello = true	
@@ -166,6 +169,7 @@ function scene:create( event )
 	sceneGroup:insert( step1 )
 	sceneGroup:insert( step2 )
 	sceneGroup:insert( enemy )
+	sceneGroup:insert( HUD )
 	--sceneGroup:insert( controls )
 	--sceneGroup:insert( btnJump )
 end
