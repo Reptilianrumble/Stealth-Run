@@ -1127,7 +1127,7 @@ function scene:create( event )
 	background:setFillColor( 1 )
 	
 	-- make a hero (off-screen), position it, and rotate slightly
-	hero = display.newImageRect( "stealth_run_character.png", 80, 80 )
+	hero = display.newImageRect( "character_final.png", 15, 40 )
 	hero.x, hero.y = 30, 197.5
 	
 	-- add physics to the hero
@@ -1135,7 +1135,7 @@ function scene:create( event )
 	hero.isFixedRotation = true
 	
 	
-	enemy = display.newImageRect( "Enemy.png", 50, 50 )
+	enemy = display.newImageRect( "enemy_final.png", 19, 50 )
 	enemy.x, enemy.y = 450, 212.5
 
 	physics.addBody( enemy, { density=1.0, friction=0.3, bounce=0.3 } )
@@ -1148,9 +1148,20 @@ function scene:create( event )
 	----------------------------------------adding enemy move loop here
 	local hello = true	
 	----------------------------------------
+	local counter = 0
 	
-	local HUD = display.newText("Score:" .. "    " .. "Time:", 20, 40, native.systemFont, 12 )
-	HUD:setFillColor ( 0, 1, 0)
+	local HUDscore = display.newText("Score:", 20, 40, native.systemFont, 12 )
+	HUDscore:setFillColor ( 0, 0, 0)
+	
+	local HUDtime = display.newText("Time: " .. counter, 20, 60, native.systemFont, 12 )
+	HUDtime:setFillColor ( 0, 0, 0)
+ 
+    	local function updateTimer(event)
+            counter = counter + 1
+            HUDtime.text = "Time: " .. counter .. " secs"
+    	end
+ 
+    	timer.performWithDelay(1000, updateTimer, 6000)
 	
 	local controls = display.newText("Use WASD or the arrow keys to move around!", display.contentCenterX - 120, display.contentCenterY - 60, native.systemFont, 12 )
 	controls:setFillColor ( 0, 0, 0)
@@ -1260,7 +1271,8 @@ function scene:create( event )
 	camera:insert( step1 )
 	camera:insert( step2 )
 	camera:insert( enemy )
-	sceneGroup:insert( HUD )
+	sceneGroup:insert( HUDscore )
+	sceneGroup:insert( HUDtime )
 	
 
 end
