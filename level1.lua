@@ -1121,10 +1121,9 @@ function scene:create( event )
 	-- the physical screen will likely be a different shape than our defined content area
 	-- since we are going to position the background from it's top, left corner, draw the
 	-- background at the real top, left corner.
-	local background = display.newRect( display.screenOriginX, display.screenOriginY, screenW, screenH )
+	local background = display.newRect( "background_final", screenW, screenH )
 	background.anchorX = 0 
 	background.anchorY = 0
-	background:setFillColor( 1 )
 	
 	-- make a hero (off-screen), position it, and rotate slightly
 	hero = display.newImageRect( "character_final.png", 15, 40 )
