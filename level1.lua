@@ -928,6 +928,8 @@ local function onKeyEvent ( event )
 	elseif (event.keyName == "e" and (math.abs(hero.x - painting.x) < 35 and math.abs(hero.y - painting.y) < 50)) then
 		hasItem = 1
 		painting.y = 5438345439345
+	elseif (event.keyName == "e" and (math.abs(hero.x - finishPoint.x) < 35 and math.abs(hero.y - finishPoint.y) < 50) and hasItem == 1) then
+		hasItem = 2
 	end
 end
 
@@ -1175,7 +1177,7 @@ function scene:create( event )
 	local enemyWarning = display.newText("But be careful not to be spotted by enemies", display.contentCenterX + 20, display.contentCenterY, native.systemFont, 12 )
 	enemyWarning:setFillColor ( 0, 0, 0)
 	
-	local finishPoint = display.newRect(5, 224, 30, 30)
+	finishPoint = display.newRect(5, 224, 30, 30)
 	finishPoint:setFillColor ( 0, 1, 0 )
 	
 	local wallLeft	= display.newImageRect( "BorderWall.png", 20, 480 )
