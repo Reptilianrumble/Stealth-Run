@@ -837,7 +837,6 @@ return scene
 *****************************************************************************************************
 *****************************************************************************************************
 *****************************************************************************************************
-
 -----------------------------------------------------------------------------------------
 --
 -- level1.lua
@@ -1087,12 +1086,6 @@ local function fireOnTimer( event )
 	-- Ensure that all previous beams/bursts are cleared/complete before firing
 	if ( beamGroup.numChildren == 0 ) then
 
-		-- Stop rotating turret as it fires
-		turret.angularVelocity = 0
-
-		-- Play laser sound
-		audio.play( sndLaserHandle )
-
 		-- Calculate ending x/y of beam
 		local xDest = turret.x - (math.cos(math.rad(turret.rotation+90)) * 1600 )
 		local yDest = turret.y - (math.sin(math.rad(turret.rotation+90)) * 1600 )
@@ -1130,7 +1123,7 @@ function scene:create( event )
 		
 	-- make a hero (off-screen), position it, and rotate slightly
 	hero = display.newImageRect( "stealth_run_character.png", 20, 60 )
-	hero.x, hero.y = 30, 197.5
+	hero.x, hero.y = 30, 207
 	
 	-- add physics to the hero
 	physics.addBody( hero, { density=1.0, wfriction=0.3, bounce=0.0 } )
@@ -1347,3 +1340,4 @@ scene:addEventListener( "destroy", scene )
 -----------------------------------------------------------------------------------------
 
 return scene
+
