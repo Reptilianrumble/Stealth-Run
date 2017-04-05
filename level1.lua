@@ -503,3 +503,324 @@ scene:addEventListener( "destroy", scene )
 -----------------------------------------------------------------------------------------
 
 return scene
+
+*******************************************************************************************************************************************************************************************************
+******************************************************************************************************************************************
+******************************************************************************************************************************
+
+-----------------------------------------------------------------------------------------
+--
+-- level1.lua
+--
+-----------------------------------------------------------------------------------------
+
+local composer = require( "composer" )
+local scene = composer.newScene()
+local camera 
+-- include Corona's "physics" library
+local physics = require "physics"
+
+--------------------------------------------
+
+
+-- forward declarations and other locals
+local screenW, screenH, halfW = display.actualContentWidth, display.actualContentHeight, display.contentCenterX
+local hero = {}
+
+local function moveCamera()
+	
+	local leftOffset = 100
+	local heroX = hero.x
+	local heroY = hero.y
+	local yOffset = 200
+	local screenLeft = -camera.x
+	local moveArea = 200
+	
+	if heroX > leftOffset then
+		if heroX > screenLeft + moveArea then
+		camera.x = -hero.x + moveArea
+		elseif heroX < screenLeft + leftOffset then
+		camera.x = -heroX + leftOffset
+		end
+	else
+		camera.x = 0
+	end
+	
+	if heroY > yOffset then 
+		camera.y = heroY + yOffset
+	elseif heroY < yOffset then 
+		camera.y = -heroY + yOffset
+	end
+end
+
+local function setHeroProperties ()
+-- Hero Properties 
+hero.speed = 100
+
+end
+
+local function setHeroVelocity ()
+	heroHorizontalVelocity, heroVerticalVelocity = hero:getLinearVelocity()
+	hero:setLinearVelocity ( hero.velocity, heroVerticalVelocity)
+end
+
+local function onKeyEvent ( event )
+	
+	if(hasCollided) then
+		print("true")
+	else
+		print("false")
+	end
+	
+	local flip = 0
+	
+	if (event.keyName == "w" or event.keyName == "space" or event.keyName == "up") and heroVerticalVelocity == 0 then
+		Runtime:addEventListener ("enterFrame", setHeroVelocity)
+		hero:applyLinearImpulse (0,-50, hero.x, hero.y)
+	elseif event.keyName == "a" or event.keyName == "left" then
+		Runtime:addEventListener ("enterFrame", setHeroVelocity)
+		hero.velocity = -70
+		hero.xScale = -1
+		if (event.keyName == "a" or event.keyName == "left") and event.phase == "up" then
+		hero.velocity = hero.velocity + 70
+		Runtime:removeEventListener ("enterFrame", setHeroVelocity)
+		end
+	elseif event.keyName == "d" or event.keyName == "right" then
+		Runtime:addEventListener ("enterFrame", setHeroVelocity)
+		hero.velocity = 70
+		hero.xScale = 1
+		if (event.keyName ~= "a" or event.keyName ~= "left") and event.phase == "up" then
+		hero.velocity =  hero.velocity - 70
+		Runtime:removeEventListener ("enterFrame", setHeroVelocity)
+		end
+	elseif 	(event.keyName == "s" or event.keyName == "down") and heroVerticalVelocity ~= 0 then
+		Runtime:addEventListener ("enterFrame", setHeroVelocity)
+		heroVerticalVelocity = -0.01
+		hero:applyLinearImpulse (0,12, hero.x, hero.y)
+		
+	end
+end
+
+local function hasCollided()
+	local dx = hero.x - ladder.x
+    local dy = hero.y - ladder.y
+ 
+    local distance = math.sqrt( dx*dx + dy*dy )
+    local objectSize = (ladder.contentWidth/2) + (hero.contentWidth/2)
+ 
+    if ( dx < 50 ) then
+        return true
+    end
+    return false
+end
+
+local function gameLoop( event )
+	
+	Runtime:addEventListener( "enterFrame", hasCollided )
+	
+	if( hasCollided ) then
+		if( event.keyName == "w" or event.keyName == "space" or event.keyName == "up" ) then 
+			hero:applyLinearImpulse ( 0, -1000, hero.x, hero.y )
+		end
+	end
+end
+
+
+function scene:create( event )
+
+	camera = display.newGroup()
+
+	-- Called when the scene's view does not exist.
+	-- 
+	-- INSERT code here to initialize the scene
+	-- e.g. add display objects to 'sceneGroup', add touch listeners, etc.
+
+	local sceneGroup = self.view
+
+	-- We need physics started to add bodies, but we don't want the simulaton
+	-- running until the scene is on the screen.
+	physics.start()
+	physics.pause()
+
+
+	-- create a grey rectangle as the backdrop
+	-- the physical screen will likely be a different shape than our defined content area
+	-- since we are going to position the background from it's top, left corner, draw the
+	-- background at the real top, left corner.
+	local background = display.newRect( display.screenOriginX, display.screenOriginY, screenW, screenH )
+	background.anchorX = 0 
+	background.anchorY = 0
+	background:setFillColor( 1 )
+	
+	-- make a hero (off-screen), position it, and rotate slightly
+	hero = display.newImageRect( "stealth_run_character.png", 80, 80 )
+	hero.x, hero.y = 30, 197.5
+	
+	-- add physics to the hero
+	physics.addBody( hero, { density=1.0, wfriction=0.3, bounce=0.0 } )
+	hero.isFixedRotation = true
+	
+	
+	local enemy = display.newImageRect( "Enemy.png", 50, 50 )
+	enemy.x, enemy.y = 450, 212.5
+	
+	
+
+	physics.addBody( enemy, { density=1.0, friction=0.3, bounce=0.3 } )
+	enemy.isFixedRotation = true
+	
+	----------------------------------------adding enemy move loop here
+	local hello = true	
+	----------------------------------------
+	
+	
+	local wallLeft	= display.newImageRect( "BorderWall.png", 20, 3000 )
+	wallLeft.x, wallLeft.y = -50, 3000
+	wallLeft.anchorX = 0
+	wallLeft.anchorY = 1
+	
+	physics.addBody( wallLeft, "static", { density=5.0, friction=0.3, bounce=0.0 } )
+	wallLeft.isFixedRotation = true
+	
+	local wallRight = display.newImageRect( "BorderWall.png", 20, 150 )
+	wallRight.x, wallRight.y = 510, 150
+	wallRight.anchorX = 0
+	wallRight.anchorY = 1
+	
+	
+	physics.addBody( wallRight, "static", { density=5.0, friction=0.3, bounce=0.0 } )
+	wallRight.isFixedRotation = true
+	
+	local wallRight1 = display.newImageRect( "BorderWall.png", 20, 150 )
+	wallRight1.x, wallRight1.y = 1020, 150
+	wallRight1.anchorX = 0
+	wallRight1.anchorY = 1
+	
+	
+	physics.addBody( wallRight1, "static", { density=5.0, friction=0.3, bounce=0.0 } )
+	wallRight1.isFixedRotation = true
+	
+	local roof = display.newImageRect( "BorderWall.png", 3000, 20 )
+	roof.x, roof.y = -50, 20
+	roof.anchorX = 0
+	roof.anchorY = 1
+	
+	
+	physics.addBody( roof, "static", { density=5.0, friction=0.3, bounce=0.0 } )
+	roof.isFixedRotation = true
+	
+	local step1 = display.newImageRect( "Step.png", 30, 30 )
+	step1.x, step1.y = 200, 238
+	step1.anchorX = 0
+	step1.anchorY = 1
+	
+	physics.addBody( step1, "static", { density=5.0, friction=0.3, bounce=0.0 } )
+	step1.isFixedRotation = true
+	
+	local step2 = display.newImageRect( "Step.png", 30, 50 )
+	step2.x, step2.y = 230, 238
+	step2.anchorX = 0
+	step2.anchorY = 1
+	
+	physics.addBody( step2, "static", { density=5.0, friction=0.3, bounce=0.0 } )
+	step2.isFixedRotation = true
+	
+	ladder = display.newImageRect( "ladder.png", 50, 250 )
+	ladder.x, ladder.y = 970, 238
+	ladder.anchorX = 0
+	ladder.anchorY = 1
+	
+	
+	
+	
+	
+	-- create a ground object and add physics (with custom shape)
+	local ground = display.newImageRect( "floor.png", 3000, 82 )
+	ground.anchorX = 0
+	ground.anchorY = 1
+	--  draw the ground at the very bottom of the screen
+	ground.x, ground.y = display.screenOriginX, display.actualContentHeight + display.screenOriginY
+	
+	-- define a shape that's slightly shorter than image bounds (set draw mode to "hybrid" or "debug" to see)
+	local groundShape = { -halfW,-34, halfW,-34, halfW,34, -halfW,34 }
+	physics.addBody( ground, "static", { friction=0.3, shape=grassShape } )
+	
+	-- all display objects must be inserted into group
+	sceneGroup:insert( background )
+	camera:insert( roof )
+	camera:insert( ladder )
+	camera:insert( ground)
+	camera:insert( hero )
+	camera:insert( wallLeft )
+	camera:insert( wallRight )
+	camera:insert( wallRight1 )
+	camera:insert( step1 )
+	camera:insert( step2 )
+	camera:insert( enemy )
+
+	
+	--sceneGroup:insert( controls )
+	--sceneGroup:insert( btnJump )
+end
+
+
+function scene:show( event )
+	local sceneGroup = self.view
+	local phase = event.phase
+	
+	Runtime:addEventListener("enterFrame", moveCamera)
+	
+	if phase == "will" then
+		-- Called when the scene is still off screen and is about to move on screen
+	elseif phase == "did" then
+		-- Called when the scene is now on screen
+		-- 
+		-- INSERT code here to make the scene come alive
+		-- e.g. start timers, begin animation, play audio, etc.
+		physics.start()
+	end
+end
+
+function scene:hide( event )
+	local sceneGroup = self.view
+	
+	local phase = event.phase
+	
+	if event.phase == "will" then
+		-- Called when the scene is on screen and is about to move off screen
+		--
+		-- INSERT code here to pause the scene
+		-- e.g. stop timers, stop animation, unload sounds, etc.)
+		physics.stop()
+	elseif phase == "did" then
+		-- Called when the scene is now off screen
+	end	
+	
+end
+
+function scene:destroy( event )
+
+	-- Called prior to the removal of scene's "view" (sceneGroup)
+	-- 
+	-- INSERT code here to cleanup the scene
+	-- e.g. remove display objects, remove touch listeners, save state, etc.
+	local sceneGroup = self.view
+	
+	package.loaded[physics] = nil
+	physics = nil
+end
+
+---------------------------------------------------------------------------------
+
+-- Listener setup
+Runtime:addEventListener( "enterFrame", gameLoop )
+Runtime:addEventListener( "key", onKeyEvent )
+scene:addEventListener( "create", scene )
+scene:addEventListener( "show", scene )
+scene:addEventListener( "hide", scene )
+scene:addEventListener( "destroy", scene )
+--hero:addEventListener( "collision" )
+--ladder:addEventListener( "collision" )
+-----------------------------------------------------------------------------------------
+
+return scene
