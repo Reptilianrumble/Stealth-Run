@@ -36,6 +36,7 @@ local function onKeyEvent ( event )
 	elseif event.keyName == "a" or event.keyName == "left" then
 		Runtime:addEventListener ("enterFrame", setHeroVelocity)
 		hero.velocity = -70
+		direction = -1
 		if (event.keyName == "a" or event.keyName == "left") and event.phase == "up" then
 		hero.velocity = hero.velocity + 70
 		Runtime:removeEventListener ("enterFrame", setHeroVelocity)
@@ -43,6 +44,7 @@ local function onKeyEvent ( event )
 	elseif event.keyName == "d" or event.keyName == "right" then
 		Runtime:addEventListener ("enterFrame", setHeroVelocity)
 		hero.velocity = 70
+		direction = 1
 		if (event.keyName ~= "a" or event.keyName ~= "left") and event.phase == "up" then
 		hero.velocity =  hero.velocity - 70
 		Runtime:removeEventListener ("enterFrame", setHeroVelocity)
@@ -51,7 +53,12 @@ local function onKeyEvent ( event )
 		Runtime:addEventListener ("enterFrame", setHeroVelocity)
 		heroVerticalVelocity = -0.01
 		hero:applyLinearImpulse (0,7.5, hero.x, hero.y)
-		
+	elseif  (event.keyName == "f") then 
+		local projectile = display.newRect(hero.x, hero.y, 5, 5 )
+		projectile:setFillColor(1, 0, 0)
+        	physics.addBody( projectile, 'dynamic' )
+       		projectile.gravityScale = 1
+       		projectile:setLinearVelocity( (direction * 500), 0 )
 	end
 end
 
