@@ -838,6 +838,7 @@ return scene
 *****************************************************************************************************
 *****************************************************************************************************
 
+-----------------------------------------------------------------------------------------
 --
 -- level1.lua
 --
@@ -852,8 +853,7 @@ local beamGroup = display.newGroup()
 local physics = require "physics"
 
 --------------------------------------------
-
-
+hasItem = 0 
 -- forward declarations and other locals
 local screenW, screenH, halfW = display.actualContentWidth, display.actualContentHeight, display.contentCenterX
 local hero = {}
@@ -863,7 +863,7 @@ local function moveCamera()
 	local leftOffset = 100
 	local heroX = hero.x
 	local heroY = hero.y
-	local yOffset = 200
+	local yOffset = 210
 	local screenLeft = -camera.x
 	local moveArea = 200
 	
@@ -897,15 +897,13 @@ end
 
 local function onKeyEvent ( event )
 	
-	local flip = 0
-	
 	if (event.keyName == "w" or event.keyName == "space" or event.keyName == "up") and heroVerticalVelocity == 0 then
-		if(math.abs(hero.x - ladder.x) < 10 and math.abs(hero.y - ladder.y) < 45) then
+		if(math.abs(hero.x - ladder.x) < 35 and math.abs(hero.y - ladder.y) < 50) then
 			Runtime:addEventListener ("enterFrame", setHeroVelocity)
-			hero:applyLinearImpulse (0,-100, hero.x, hero.y)
+			hero:applyLinearImpulse (0,-30, hero.x, hero.y)
 		else
 			Runtime:addEventListener ("enterFrame", setHeroVelocity)
-			hero:applyLinearImpulse (0,-50, hero.x, hero.y)
+			hero:applyLinearImpulse (0,-10, hero.x, hero.y)
 		end
 	elseif event.keyName == "a" or event.keyName == "left" then
 		Runtime:addEventListener ("enterFrame", setHeroVelocity)
@@ -927,7 +925,9 @@ local function onKeyEvent ( event )
 		Runtime:addEventListener ("enterFrame", setHeroVelocity)
 		heroVerticalVelocity = -0.01
 		hero:applyLinearImpulse (0,12, hero.x, hero.y)
-		
+	elseif (event.keyName == "e" and (math.abs(hero.x - painting.x) < 35 and math.abs(hero.y - painting.y) < 50)) then
+		hasItem = 1
+		painting.y = 5438345439345
 	end
 end
 
@@ -984,7 +984,7 @@ end
 		end	
 		
 		for i = 1,#Path do
-		
+			enemy.xScale = -enemy.xScale
 			local segmentTime = 500
 			
 			if ( constant ) then
@@ -1121,12 +1121,13 @@ function scene:create( event )
 	-- the physical screen will likely be a different shape than our defined content area
 	-- since we are going to position the background from it's top, left corner, draw the
 	-- background at the real top, left corner.
-	local background = display.newRect( "background_final", screenW, screenH )
+	local background = display.newRect( display.screenOriginX, display.screenOriginY, screenW, screenH )
 	background.anchorX = 0 
 	background.anchorY = 0
-	
+	background:setFillColor( 1 )
+		
 	-- make a hero (off-screen), position it, and rotate slightly
-	hero = display.newImageRect( "character_final.png", 15, 40 )
+	hero = display.newImageRect( "stealth_run_character.png", 20, 60 )
 	hero.x, hero.y = 30, 197.5
 	
 	-- add physics to the hero
@@ -1134,9 +1135,10 @@ function scene:create( event )
 	hero.isFixedRotation = true
 	
 	
-	enemy = display.newImageRect( "enemy_final.png", 19, 50 )
+	
+	enemy = display.newImageRect( "Enemy.png", 40, 50 )
 	enemy.x, enemy.y = 450, 212.5
-
+	enemy.xScale = -1
 	physics.addBody( enemy, { density=1.0, friction=0.3, bounce=0.3 } )
 	enemy.isFixedRotation = true
 	
@@ -1147,26 +1149,34 @@ function scene:create( event )
 	----------------------------------------adding enemy move loop here
 	local hello = true	
 	----------------------------------------
+	
+	painting = display.newImageRect( "Perhaps Modern Art.png", 80, 80 )
+	painting.x, painting.y = 30, -90
+	
+		
 	local counter = 0
 	
-	local HUDscore = display.newText("Score:", 20, 40, native.systemFont, 12 )
-	HUDscore:setFillColor ( 0, 0, 0)
+	local HUD = display.newText("Score:" .. "    " .. "Time:", 20, 40, native.systemFont, 12 )
+	HUD:setFillColor ( 0, 1, 0)
 	
 	local HUDtime = display.newText("Time: " .. counter, 20, 60, native.systemFont, 12 )
-	HUDtime:setFillColor ( 0, 0, 0)
+	HUDtime:setFillColor ( 0, 1, 0)
  
     	local function updateTimer(event)
             counter = counter + 1
             HUDtime.text = "Time: " .. counter .. " secs"
     	end
- 
-    	timer.performWithDelay(1000, updateTimer, 6000)
+	
+	timer.performWithDelay(1000, updateTimer, 6000)
 	
 	local controls = display.newText("Use WASD or the arrow keys to move around!", display.contentCenterX - 120, display.contentCenterY - 60, native.systemFont, 12 )
 	controls:setFillColor ( 0, 0, 0)
 	
 	local enemyWarning = display.newText("But be careful not to be spotted by enemies", display.contentCenterX + 20, display.contentCenterY, native.systemFont, 12 )
 	enemyWarning:setFillColor ( 0, 0, 0)
+	
+	local finishPoint = display.newRect(5, 224, 30, 30)
+	finishPoint:setFillColor ( 0, 1, 0 )
 	
 	local wallLeft	= display.newImageRect( "BorderWall.png", 20, 480 )
 	wallLeft.x, wallLeft.y = -50, 238
@@ -1262,6 +1272,8 @@ function scene:create( event )
 	camera:insert( roof1 )
 	camera:insert( ladder )
 	camera:insert( ground)
+	camera:insert( painting )
+	camera:insert( finishPoint )
 	camera:insert( hero )
 	camera:insert( wallLeft )
 	camera:insert( wallRight )
@@ -1270,9 +1282,8 @@ function scene:create( event )
 	camera:insert( step1 )
 	camera:insert( step2 )
 	camera:insert( enemy )
-	sceneGroup:insert( HUDscore )
+	sceneGroup:insert( HUD )
 	sceneGroup:insert( HUDtime )
-	
 
 end
 
