@@ -1,0 +1,28 @@
+------Stealth Run sounds
+
+Deathsounds
+- This activates when you die, I made 2, pick which one you prefer, 
+  or ask more to make another one if they're both bad
+
+footstep
+- This activates when you walk/run
+
+hitsounds
+- These activate when someone gets hit, I made 2, both can be used,
+  I could even make more and have a wide variety of hit sounds
+
+jump
+- This activates when you jump
+
+menuSound
+- Thus sounds plays as your scrolling the menus
+  (ie the noise that plays when you're in a pause menu
+   and you scroll down from resume game to options)
+
+transitionsound
+- This sound plays when you transition from one scene to the next
+  When you press "play game" on the start menu, this sound plays
+
+VictorySound
+- This plays when you win/ beat a level
+  There are 3 options, pick 1
