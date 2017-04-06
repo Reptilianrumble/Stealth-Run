@@ -3679,7 +3679,7 @@ local function stepLoop( event )
 	if event.phase == "down" then
 		repeat 
 		audio.play (soundTable["FootstepSound"])			
-	until event.phase == "up"	
+	until event.phase == "up"
 		
 	end
 	
@@ -3703,6 +3703,7 @@ local function heroDeath( event )
 			if(math.abs(hero.x - enemy.x) < 35 and math.abs(hero.y - enemy.y) < 50) then
 			display.remove( event.other )
 			death = true
+			audio.play (soundTable["DeathSound"] )
 			Runtime:removeEventListener("enterFrame", moveCamera)
 			Runtime:removeEventListener ("enterFrame", setHeroVelocity)
 			gameOver()
@@ -3794,6 +3795,7 @@ local function onKeyEvent ( event )
 		camera:insert( projectile )
 	elseif (event.keyName == "e" and (math.abs(hero.x - painting.x) < 35 and math.abs(hero.y - painting.y) < 50)) then
 		hasItem = 1
+		audio.play (soundTable["victorySound"] )
 		painting.y = 5438345439345
 	elseif (event.keyName == "e" and (math.abs(hero.x - finishPoint.x) < 35 and math.abs(hero.y - finishPoint.y) < 50) and hasItem == 1) then
 		hasItem = 2
@@ -3802,6 +3804,7 @@ local function onKeyEvent ( event )
 end
 
 function victory()
+	audio.play (soundTable["victorySound"] )
 	Runtime:removeEventListener( "key", onKeyEvent )
 	hero:removeEventListener("enterFrame", setHeroVelocity)
 	composer.gotoScene("victory", "fade", 500)
