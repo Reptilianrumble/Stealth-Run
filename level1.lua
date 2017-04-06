@@ -3570,3 +3570,676 @@ scene:addEventListener( "destroy", scene )
 
 return scene
 
+
+*********************************************************************************************
+**************************[[EVERYTHING BUT GAME OVER AND VICTORY WORKING]]*******************
+*********************************************************************************************
+
+-----------------------------------------------------------------------------------------
+--
+-- level1.lua
+--
+-----------------------------------------------------------------------------------------
+
+local composer = require( "composer" )
+local scene = composer.newScene()
+local camera 
+local beamGroup = display.newGroup()
+
+-- include Corona's "physics" library
+local physics = require "physics"
+
+--------------------------------------------
+hasItem = 0 
+-- forward declarations and other locals
+local screenW, screenH, halfW = display.actualContentWidth, display.actualContentHeight, display.contentCenterX
+local hero = {}
+
+death = false
+enemyDead = false
+knifeCount = 3
+hero.x, hero.y = 30, 207
+local soundTable = {
+
+	GadgetSound = audio.loadSound( "betaGadgetsound.wav" ),
+	DeathSound = audio.loadSound( "deathsound1.wav" ),
+	FootstepSound = audio.loadSound( "footstep.wav" ),
+	hitSound = audio.loadSound( "hitsound2.wav" ),
+	jumpSound = audio.loadSound( "jump.wav" ),
+	ladderSound = audio.loadSound( "ladder.wav" ),
+	menuSound = audio.loadSound( "menusound.wav" ), 
+	transitionSound = audio.loadSound( "transitionsound.wav" ),
+	victorySound = audio.loadSound( "victorysound3.wav" )
+
+}
+
+local function moveCamera()
+	
+	local leftOffset = 100
+	local heroX = hero.x
+	local heroY = hero.y
+	local yOffset = 210
+	local screenLeft = -camera.x
+	local moveArea = 200
+	
+	if heroX > leftOffset then
+		if heroX > screenLeft + moveArea then
+		camera.x = -hero.x + moveArea
+		elseif heroX < screenLeft + leftOffset then
+		camera.x = -heroX + leftOffset
+		end
+	else
+		camera.x = 0
+	end
+	
+	if heroY > yOffset then 
+		camera.y = heroY + yOffset
+	elseif heroY < yOffset then 
+		camera.y = -heroY + yOffset
+	end
+end
+
+local function setHeroProperties ()
+-- Hero Properties 
+hero.speed = 70
+
+end
+
+local function setHeroVelocity ()
+	heroHorizontalVelocity, heroVerticalVelocity = hero:getLinearVelocity()
+	hero:setLinearVelocity ( hero.velocity, heroVerticalVelocity)
+end
+
+local function setProjectileVelocity (  )
+	projectileHorizontalVelocity, projectileVerticalVelocity = projectile:getLinearVelocity()
+	projectile:setLinearVelocity ( projectile.velocity, projectileVerticalVelocity)
+end
+
+local function enemyCollision( event )
+	if event.other.type == "enemy1" then
+		display.remove ( event.other )
+		enemyDead = true
+		projectile:removeEventListener( "collison", enemyCollision )
+	end
+end
+	
+local function projectileCollision( event )
+    if event.phase == 'began' then
+        if event.other.type == 'knife' then
+            display.remove( event.other )
+			Runtime:removeEventListener ("enterFrame", setProjectileVelocity)
+			
+           --event.other = nil
+        end
+    end
+end
+
+local function stepLoop( event )
+	
+	if event.phase == "down" then
+		repeat 
+		audio.play (soundTable["FootstepSound"])			
+	until event.phase == "up"	
+		
+	end
+	
+end
+
+
+function soundTable:timer( event )
+	
+	if keyUP == false then
+	audio.play (soundTable["FootstepSound"] )
+	else
+		timer.cancel(event.source)
+end
+end
+
+local function heroDeath( event )
+	
+
+	if event.phase == "began" then
+		if event.other.tpye ~= "knife" then
+			if(math.abs(hero.x - enemy.x) < 35 and math.abs(hero.y - enemy.y) < 50) then
+			display.remove( event.other )
+			death = true
+			Runtime:removeEventListener("enterFrame", moveCamera)
+			Runtime:removeEventListener ("enterFrame", setHeroVelocity)
+			gameOver()
+			end
+		end
+	end
+end
+
+local function onKeyEvent ( event )
+	
+	keyUP = true
+	
+	if (event.keyName == "w" or event.keyName == "space" or event.keyName == "up") and heroVerticalVelocity == 0 then
+		if(math.abs(hero.x - ladder.x) < 35 and math.abs(hero.y - ladder.y) < 50) then
+			Runtime:addEventListener ("enterFrame", setHeroVelocity)
+			--enemy:addEventListener("collision", heroDeath)
+			audio.play (soundTable["ladderSound"] )
+			hero:applyLinearImpulse (0,-30, hero.x, hero.y)
+		else
+			Runtime:addEventListener ("enterFrame", setHeroVelocity)
+			audio.play (soundTable["jumpSound"] )
+			hero:applyLinearImpulse (0,-10, hero.x, hero.y)
+		end
+		if(heroVerticalVelocity == 0) then
+			Runtime:removeEventListener ("enterFrame", setHeroVelocity)
+		end
+	elseif event.keyName == "a" or event.keyName == "left" then
+		Runtime:addEventListener ("enterFrame", setHeroVelocity)
+		hero.velocity = -70
+		hero.xScale = -1
+		keyUP = false
+			if	heroVerticalVelocity == 0 and event.phase ~= "up" then
+				timer.performWithDelay(200, soundTable, -1 )
+			end
+		if (event.keyName == "a" or event.keyName == "left") and event.phase == "up" then
+		hero.velocity = hero.velocity + 70
+		Runtime:removeEventListener ("enterFrame", setHeroVelocity)
+		keyUP = true
+		end
+	elseif event.keyName == "d" or event.keyName == "right" then
+		Runtime:addEventListener ("enterFrame", setHeroVelocity)
+		hero.velocity = 70
+		hero.xScale = 1
+		keyUP = false
+			if heroVerticalVelocity ==0 and event.phase ~= "up"  then
+				timer.performWithDelay(200, soundTable, -1 )
+			end	
+		if (event.keyName ~= "a" or event.keyName ~= "left") and event.phase == "up" then
+		hero.velocity =  hero.velocity - 70
+		Runtime:removeEventListener ("enterFrame", setHeroVelocity)
+		keyUP = true
+		end
+	elseif 	(event.keyName == "s" or event.keyName == "down") and heroVerticalVelocity ~= 0 then
+		Runtime:addEventListener ("enterFrame", setHeroVelocity)
+		heroVerticalVelocity = -0.01
+		hero:applyLinearImpulse (0,12, hero.x, hero.y)
+	elseif  (event.keyName == "f") and event.phase ~= "up" and knifeCount > 0 then 
+		if hero.xScale == 1 then
+		projectile = display.newRect(hero.x+1, hero.y, 5, 5 )
+		else
+		projectile = display.newRect(hero.x-1, hero.y, 5, 5 )
+		end
+		knifeCount = knifeCount - 1
+		timer.performWithDelay(200, ammoCount(), 1)
+		audio.play (soundTable["GadgetSound"] )
+		projectile.type = "knife"
+		Runtime:addEventListener ("enterFrame", setProjectileVelocity)
+		enemy.collision = enemyCollision
+		--enemy:addEventListener("collision", enemy)
+		projectile:addEventListener( "collision", enemyCollision )
+		ground:addEventListener( 'collision', projectileCollision )
+		if enemyDead == false then
+		enemy:addEventListener( 'collision', projectileCollision )
+		end
+		step1:addEventListener( 'collision', projectileCollision )
+		step2:addEventListener( 'collision', projectileCollision )
+		wallLeft:addEventListener( 'collision', projectileCollision )
+		wallRight:addEventListener( 'collision', projectileCollision )
+		wallRight1:addEventListener( 'collision', projectileCollision )
+		wallRight2:addEventListener( 'collision', projectileCollision )
+		roof:addEventListener( 'collision', projectileCollision )
+		roof1:addEventListener( 'collision', projectileCollision )
+		--projectile:addEventListener("collision", projectileCleanup)
+		projectile:setFillColor(1, 0, 0)
+        physics.addBody( projectile, 'dynamic' )
+       	projectile.gravityScale = 1
+		projectile.velocity = hero.xScale * 500
+       	--projectileCleanUp()
+		camera:insert( projectile )
+	elseif (event.keyName == "e" and (math.abs(hero.x - painting.x) < 35 and math.abs(hero.y - painting.y) < 50)) then
+		hasItem = 1
+		painting.y = 5438345439345
+	elseif (event.keyName == "e" and (math.abs(hero.x - finishPoint.x) < 35 and math.abs(hero.y - finishPoint.y) < 50) and hasItem == 1) then
+		hasItem = 2
+		victory()
+	end
+end
+
+function victory()
+	Runtime:removeEventListener( "key", onKeyEvent )
+	hero:removeEventListener("enterFrame", setHeroVelocity)
+	composer.gotoScene("victory", "fade", 500)
+end
+
+function gameOver()
+	Runtime:removeEventListener( "key", onKeyEvent )
+	hero:removeEventListener("enterFrame", setHeroVelocity)
+	composer.gotoScene("gameOver", "fade", 500)
+end
+
+	local Path = {}
+	Path[1] = { x=-50, y=0}
+	Path[2] = { x=50, y=0 }
+
+	local function distBetween( x1, y1, x2, y2 )
+		local xFactor = x2 - x1
+		local yFactor = y2 - y1
+		local dist = math.sqrt( (xFactor*xFactor) + (yFactor*yFactor) )
+		return dist
+	end
+
+	pathIndex = 1
+	
+	function setPath( enemy, Path, params )
+		
+		local delta = params.useDelta or nil
+		local deltaX = enemy.x
+		local deltaY = enemy.y
+		local constant = params.constantTime or nil
+		local ease = params.easingMethod or easing.linear
+		local tag = params.tag or nil
+		local delay = params.delay or 0
+        local speedFactor = 1
+		local segmentTime = 500
+
+		if ( delta ) then
+			deltaX = enemy.x
+			deltaY = enemy.y
+		end	
+		
+		
+		transition.to( enemy, { 
+			tag=tag,
+			time=segmentTime,
+			x=deltaX+Path[pathIndex].x,
+			y=deltaY+Path[pathIndex].y,
+			delay=delay,
+			transition=ease, 
+			onComplete = function (event)
+				if enemyDead == false then
+					enemy:addEventListener("collision", heroDeath)
+					pathIndex = pathIndex + 1
+					enemy.xScale = -enemy.xScale
+					if( pathIndex > #Path ) then
+						pathIndex = 1
+					end
+				setPath( enemy, Path, params )
+				end
+			end
+		} )
+		
+		
+		--[[timer.performWithDelay( segmentTime, {  } )
+		
+		if ( constant ) then
+			local dist = distBetween( enemy.x, enemy.y, deltaX+Path[1].x, deltaY+Path[1].y)
+			speedFactor = constant/dist
+		end	
+		
+		for i = 1,#Path do
+			
+			if ( constant ) then
+				local dist
+				if( i==1 ) then
+					dist = distBetween(  enemy.x, enemy.y, deltaX+Path[i].x, deltaY+Path[i].y )
+			else
+				dist = distBetween( Path[i-1].x, Path[i-1].y, Path[i].x, Path[i].y )
+			end
+			segmentTime = dist*speedFactor
+			else
+				if ( path[i].time ) then segmentTime = path[i].time end
+		end
+		
+		 if ( Path[i].easingMethod ) then ease = Path[i].easingMethod end
+		 
+		 
+		 
+      delay = delay + segmentTime--]]
+	  
+	  
+   --end
+   
+end
+
+	
+
+local function resetBeams()
+
+	-- Clear all beams/bursts from display
+	for i = beamGroup.numChildren,1,-1 do
+		local child = beamGroup[i]
+		display.remove( child )
+		child = nil
+	end
+
+	-- Reset beam group alpha
+	beamGroup.alpha = 1
+
+	-- Restart turret rotating after firing is finished
+	turret.angularVelocity = turretSpeed
+end
+	
+local function drawBeam( startX, startY, endX, endY )
+
+	-- Draw a series of overlapping lines to represent the beam
+	local beam1 = display.newLine( beamGroup, startX, startY, endX, endY )
+	beam1.strokeWidth = 2 ; beam1:setStrokeColor( 1, 0.312, 0.157, 1 ) ; beam1.blendMode = "add" ; beam1:toBack()
+	local beam2 = display.newLine( beamGroup, startX, startY, endX, endY )
+	beam2.strokeWidth = 4 ; beam2:setStrokeColor( 1, 0.312, 0.157, 0.706 ) ; beam2.blendMode = "add" ; beam2:toBack()
+	local beam3 = display.newLine( beamGroup, startX, startY, endX, endY )
+	beam3.strokeWidth = 6 ; beam3:setStrokeColor( 1, 0.196, 0.157, 0.392 ) ; beam3.blendMode = "add" ; beam3:toBack()
+end
+
+	
+local function castRay( startX, startY, endX, endY )
+
+	-- Perform ray cast
+	local hits = physics.rayCast( startX, startY, endX, endY, "closest" )
+
+	-- There is a hit; calculate the entire ray sequence (initial ray and reflections)
+	if ( hits and beamGroup.numChildren <= maxBeams ) then
+
+		-- Store first hit to variable (just the "closest" hit was requested, so use 'hits[1]')
+		local hitFirst = hits[1]
+
+		-- Store the hit X and Y position to local variables
+		local hitX, hitY = hitFirst.position.x, hitFirst.position.y
+	
+		-- Draw the next beam
+		drawBeam( startX, startY, hitX, hitY )
+
+		-- Check for and calculate the reflected ray
+		local reflectX, reflectY = physics.reflectRay( startX, startY, hitFirst )
+		
+		
+		 for i = 1,#hits do
+			if(object == hero) then
+				for i = 1,#Path do
+					Path[i] = {x = hero.x}
+				end
+			end
+			timer.performWithDelay( 40, function() castRay( hitX, hitY, reflectEndX, reflectEndY ); end )
+		end
+		
+		
+	-- Else, ray casting sequence is complete
+	else
+
+		-- Draw the final beam
+		drawBeam( startX, startY, endX, endY )
+
+		-- Fade out entire beam group after a short delay
+		transition.to( beamGroup, { time=800, delay=400, alpha=0, onComplete=resetBeams } )
+	end
+end
+	
+local function fireOnTimer( event )
+
+	-- Ensure that all previous beams/bursts are cleared/complete before firing
+	if ( beamGroup.numChildren == 0 ) then
+
+		-- Calculate ending x/y of beam
+		local xDest = turret.x - (math.cos(math.rad(turret.rotation+90)) * 1600 )
+		local yDest = turret.y - (math.sin(math.rad(turret.rotation+90)) * 1600 )
+
+		-- Cast the initial ray
+		castRay( turret.x, turret.y, xDest, yDest )
+	end
+end	
+
+
+
+function scene:create( event )
+
+	camera = display.newGroup()
+	
+	-- Called when the scene's view does not exist.
+	-- 
+	-- INSERT code here to initialize the scene
+	-- e.g. add display objects to 'sceneGroup', add touch listeners, etc.
+
+	local sceneGroup = self.view
+
+	-- We need physics started to add bodies, but we don't want the simulaton
+	-- running until the scene is on the screen.
+	physics.start()
+	physics.pause()
+
+
+	-- create a grey rectangle as the backdrop
+	-- the physical screen will likely be a different shape than our defined content area
+	-- since we are going to position the background from it's top, left corner, draw the
+	-- background at the real top, left corner.
+	local background = display.newRect( display.screenOriginX, display.screenOriginY, screenW, screenH )
+	background.anchorX = 0 
+	background.anchorY = 0
+	background:setFillColor( 0.25 )
+		
+	-- make a hero (off-screen), position it, and rotate slightly
+	hero = display.newImageRect( "stealth_run_character.png", 20, 60 )
+	hero.x, hero.y = 30, 207
+	
+	-- add physics to the hero
+	physics.addBody( hero, { density=1.0, wfriction=0.3, bounce=0.0 } )
+	hero.isFixedRotation = true
+	hero.type = "hero"
+	
+	
+	enemy = display.newImageRect( "Enemy.png", 40, 50 )
+	enemy.x, enemy.y = 450, 212.5
+	enemy.xScale = -1
+	physics.addBody( enemy, { density=1.0, friction=0.3, bounce=0.3 } )
+	enemy.isFixedRotation = true
+	enemy.type = "enemy1"
+	
+			setPath( enemy, Path, { tag=tag, time=2000, x=Path[1].x, y=Path[1].y, delay=200 } )
+
+	
+	
+	----------------------------------------adding enemy move loop here
+	local hello = true	
+	----------------------------------------
+	
+	painting = display.newImageRect( "Perhaps Modern Art.png", 80, 80 )
+	painting.x, painting.y = 30, -90
+	
+		
+	local counter = 0
+	
+	local HUD = display.newText("Score:" .. "    " .. "Time:", 20, 40, native.systemFont, 12 )
+	HUD:setFillColor ( 0, 1, 0)
+	
+	HUDammo = display.newText("Knives:" .. "    " .. knifeCount, 300, 40, native.systemFont, 12 )
+	HUDammo:setFillColor ( 0, 1, 0)
+	
+	function ammoCount( event )
+		
+		HUDammo.text = "Knives:" .. "    " .. knifeCount
+	
+	end
+	
+	local HUDtime = display.newText("Time: " .. counter, 20, 60, native.systemFont, 12 )
+	HUDtime:setFillColor ( 0, 1, 0)
+ 
+    	local function updateTimer(event)
+            counter = counter + 1
+            HUDtime.text = "Time: " .. counter .. " secs"
+    	end
+	
+	timer.performWithDelay(1000, updateTimer, 6000)
+	
+	local controls = display.newText("Use WASD or the arrow keys to move around!", display.contentCenterX - 120, display.contentCenterY - 60, native.systemFont, 12 )
+	controls:setFillColor ( 0, 0, 0)
+	
+	local enemyWarning = display.newText("But be careful not to be spotted by enemies", display.contentCenterX + 20, display.contentCenterY, native.systemFont, 12 )
+	enemyWarning:setFillColor ( 0, 0, 0)
+	
+	finishPoint = display.newRect(5, 224, 30, 30)
+	finishPoint:setFillColor ( 0, 1, 0 )
+	
+	wallLeft	= display.newImageRect( "BorderWall.png", 20, 480 )
+	wallLeft.x, wallLeft.y = -50, 238
+	wallLeft.anchorX = 0
+	wallLeft.anchorY = 1
+	
+	physics.addBody( wallLeft, "static", { density=5.0, friction=0.3, bounce=0.0 } )
+	wallLeft.isFixedRotation = true
+	
+	
+	wallRight = display.newImageRect( "BorderWall.png", 20, 150 )
+	wallRight.x, wallRight.y = 510, 150
+	wallRight.anchorX = 0
+	wallRight.anchorY = 1
+	
+	
+	physics.addBody( wallRight, "static", { density=5.0, friction=0.3, bounce=0.0 } )
+	wallRight.isFixedRotation = true
+	
+	wallRight1 = display.newImageRect( "BorderWall.png", 20, 475 )
+	wallRight1.x, wallRight1.y = 1020, 238
+	wallRight1.anchorX = 0
+	wallRight1.anchorY = 1
+	
+	
+	physics.addBody( wallRight1, "static", { density=5.0, friction=0.3, bounce=0.0 } )
+	wallRight1.isFixedRotation = true
+
+	wallRight2 = display.newImageRect( "BorderWall.png", 20, 165 )
+	wallRight2.x, wallRight2.y = 510, -90
+	wallRight2.anchorX = 0
+	wallRight2.anchorY = 1
+	
+	
+	physics.addBody( wallRight2, "static", { density=5.0, friction=0.3, bounce=0.0 } )
+	wallRight2.isFixedRotation = true
+	
+	roof = display.newImageRect( "BorderWall.png", 975, 20 )
+	roof.x, roof.y = -50, 20
+	roof.anchorX = 0
+	roof.anchorY = 1
+	
+	
+	physics.addBody( roof, "static", { density=5.0, friction=0.3, bounce=0.0 } )
+	roof.isFixedRotation = true
+	
+	roof1 = display.newImageRect( "BorderWall.png", 1090, 20 )
+	roof1.x, roof1.y = -50, -237
+	roof1.anchorX = 0
+	roof1.anchorY = 1
+	
+	
+	physics.addBody( roof1, "static", { density=5.0, friction=0.3, bounce=0.0 } )
+	roof1.isFixedRotation = true
+	
+	step1 = display.newImageRect( "Step.png", 30, 30 )
+	step1.x, step1.y = 200, 238
+	step1.anchorX = 0
+	step1.anchorY = 1
+	
+	physics.addBody( step1, "static", { density=5.0, friction=0.3, bounce=0.0 } )
+	step1.isFixedRotation = true
+	
+	step2 = display.newImageRect( "Step.png", 30, 50 )
+	step2.x, step2.y = 230, 238
+	step2.anchorX = 0
+	step2.anchorY = 1
+	
+	physics.addBody( step2, "static", { density=5.0, friction=0.3, bounce=0.0 } )
+	step2.isFixedRotation = true
+	
+	ladder = display.newImageRect( "ladder.png", 50, 250 )
+	ladder.x, ladder.y = 970, 238
+	ladder.anchorX = 0
+	ladder.anchorY = 1
+	
+	-- create a ground object and add physics (with custom shape)
+	ground = display.newImageRect( "floor.png", 3000, 82 )
+	ground.anchorX = 0
+	ground.anchorY = 1
+	--  draw the ground at the very bottom of the screen
+	ground.x, ground.y = display.screenOriginX, display.actualContentHeight + display.screenOriginY
+	
+	-- define a shape that's slightly shorter than image bounds (set draw mode to "hybrid" or "debug" to see)
+	local groundShape = { -halfW,-34, halfW,-34, halfW,34, -halfW,34 }
+	physics.addBody( ground, "static", { friction=0.3, shape=grassShape } )
+	
+	-- all display objects must be inserted into group
+	sceneGroup:insert( background )
+	camera:insert( controls )
+	camera:insert( enemyWarning )
+	camera:insert( roof )
+	camera:insert( roof1 )
+	camera:insert( ladder )
+	camera:insert( ground)
+	camera:insert( painting )
+	camera:insert( finishPoint )
+	camera:insert( hero )
+	camera:insert( wallLeft )
+	camera:insert( wallRight )
+	camera:insert( wallRight1 )
+	camera:insert( wallRight2 )
+	camera:insert( step1 )
+	camera:insert( step2 )
+	camera:insert( enemy )
+	sceneGroup:insert( HUD )
+	sceneGroup:insert( HUDtime )
+	sceneGroup:insert( HUDammo )
+	
+
+end
+
+
+function scene:show( event )
+	local sceneGroup = self.view
+	local phase = event.phase
+	
+	Runtime:addEventListener("enterFrame", moveCamera)
+	
+	if phase == "will" then
+		-- Called when the scene is still off screen and is about to move on screen
+	elseif phase == "did" then
+		-- Called when the scene is now on screen
+		-- 
+		-- INSERT code here to make the scene come alive
+		-- e.g. start timers, begin animation, play audio, etc.
+		physics.start()
+	end
+end
+
+function scene:hide( event )
+	local sceneGroup = self.view
+	
+	local phase = event.phase
+	
+	if event.phase == "will" then
+		-- Called when the scene is on screen and is about to move off screen
+		--
+		-- INSERT code here to pause the scene
+		-- e.g. stop timers, stop animation, unload sounds, etc.)
+		physics.stop()
+	elseif phase == "did" then
+		-- Called when the scene is now off screen
+	end	
+	
+end
+
+function scene:destroy( event )
+
+	-- Called prior to the removal of scene's "view" (sceneGroup)
+	-- 
+	-- INSERT code here to cleanup the scene
+	-- e.g. remove display objects, remove touch listeners, save state, etc.
+	local sceneGroup = self.view
+	
+	package.loaded[physics] = nil
+	physics = nil
+end
+
+---------------------------------------------------------------------------------
+
+-- Listener setup
+Runtime:addEventListener( "key", onKeyEvent )
+scene:addEventListener( "create", scene )
+scene:addEventListener( "show", scene )
+scene:addEventListener( "hide", scene )
+scene:addEventListener( "destroy", scene )
+-----------------------------------------------------------------------------------------
+
+return scene
+
