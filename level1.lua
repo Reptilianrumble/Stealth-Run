@@ -929,6 +929,7 @@ local function onKeyEvent ( event )
 		painting.y = 5438345439345
 	elseif (event.keyName == "e" and (math.abs(hero.x - finishPoint.x) < 35 and math.abs(hero.y - finishPoint.y) < 50) and hasItem == 1) then
 		hasItem = 2
+		victory()
 	end
 end
 
@@ -1896,7 +1897,7 @@ local physics = require "physics"
 local soundTable = {
 
 	GadgetSound = audio.loadSound( "betaGadgetsound.wav" ),
-	DeathSound = audio.loadSound( "deathsound1.wav" ),
+	Sound = audio.loadSound( "deathsound1.wav" ),
 	FootstepSound = audio.loadSound( "footstep.wav" ),
 	hitSound = audio.loadSound( "hitsound2.wav" ),
 	jumpSound = audio.loadSound( "jump.wav" ),
@@ -2002,9 +2003,17 @@ local function onKeyEvent ( event )
 		painting.y = 5438345439345
 	elseif (event.keyName == "e" and (math.abs(hero.x - finishPoint.x) < 35 and math.abs(hero.y - finishPoint.y) < 50) and hasItem == 1) then
 		hasItem = 2
+		victory()
 	end
 end
 
+function victory()
+	composer.gotoScene ("victory", "fade", 500)
+end
+
+function gameOver()
+	composer.gotoScene ("gameOver", "fade", 500)
+end
 
 	local Path = {}
 	Path[1] = { x=-50, y=0}
@@ -2197,13 +2206,12 @@ function scene:create( event )
 	-- the physical screen will likely be a different shape than our defined content area
 	-- since we are going to position the background from it's top, left corner, draw the
 	-- background at the real top, left corner.
-	local background = display.newRect( display.screenOriginX, display.screenOriginY, screenW, screenH )
+	local background = display.newRect( "background_final", screenW, screenH )
 	background.anchorX = 0 
 	background.anchorY = 0
-	background:setFillColor( 1 )
 		
 	-- make a hero (off-screen), position it, and rotate slightly
-	hero = display.newImageRect( "stealth_run_character.png", 20, 60 )
+	hero = display.newImageRect( "character_final.png", 20, 60 )
 	hero.x, hero.y = 30, 207
 	
 	-- add physics to the hero
@@ -2212,7 +2220,7 @@ function scene:create( event )
 	
 	
 	
-	enemy = display.newImageRect( "Enemy.png", 40, 50 )
+	enemy = display.newImageRect( "enemy_final.png", 40, 50 )
 	enemy.x, enemy.y = 450, 212.5
 	enemy.xScale = -1
 	physics.addBody( enemy, { density=1.0, friction=0.3, bounce=0.3 } )
@@ -2233,8 +2241,8 @@ function scene:create( event )
 		
 	local counter = 0
 	
-	local HUD = display.newText("Score:" .. "    " .. "Time:", 20, 40, native.systemFont, 12 )
-	HUD:setFillColor ( 0, 1, 0)
+	local HUDscore = display.newText("Score:", 20, 40, native.systemFont, 12 )
+	HUDscore:setFillColor ( 0, 1, 0)
 	
 	local HUDtime = display.newText("Time: " .. counter, 20, 60, native.systemFont, 12 )
 	HUDtime:setFillColor ( 0, 1, 0)
@@ -2255,7 +2263,7 @@ function scene:create( event )
 	finishPoint = display.newRect(5, 224, 30, 30)
 	finishPoint:setFillColor ( 0, 1, 0 )
 	
-	local wallLeft	= display.newImageRect( "BorderWall.png", 20, 480 )
+	local wallLeft	= display.newImageRect( "border_wall_final.png", 20, 480 )
 	wallLeft.x, wallLeft.y = -50, 238
 	wallLeft.anchorX = 0
 	wallLeft.anchorY = 1
@@ -2264,7 +2272,7 @@ function scene:create( event )
 	wallLeft.isFixedRotation = true
 	
 	
-	local wallRight = display.newImageRect( "BorderWall.png", 20, 150 )
+	local wallRight = display.newImageRect( "border_wall_final.png", 20, 150 )
 	wallRight.x, wallRight.y = 510, 150
 	wallRight.anchorX = 0
 	wallRight.anchorY = 1
@@ -2273,7 +2281,7 @@ function scene:create( event )
 	physics.addBody( wallRight, "static", { density=5.0, friction=0.3, bounce=0.0 } )
 	wallRight.isFixedRotation = true
 	
-	local wallRight1 = display.newImageRect( "BorderWall.png", 20, 475 )
+	local wallRight1 = display.newImageRect( "border_wall_final.png", 20, 475 )
 	wallRight1.x, wallRight1.y = 1020, 238
 	wallRight1.anchorX = 0
 	wallRight1.anchorY = 1
@@ -2282,7 +2290,7 @@ function scene:create( event )
 	physics.addBody( wallRight1, "static", { density=5.0, friction=0.3, bounce=0.0 } )
 	wallRight1.isFixedRotation = true
 
-	local wallRight2 = display.newImageRect( "BorderWall.png", 20, 165 )
+	local wallRight2 = display.newImageRect( "border_wall_final.png", 20, 165 )
 	wallRight2.x, wallRight2.y = 510, -90
 	wallRight2.anchorX = 0
 	wallRight2.anchorY = 1
@@ -2291,7 +2299,7 @@ function scene:create( event )
 	physics.addBody( wallRight2, "static", { density=5.0, friction=0.3, bounce=0.0 } )
 	wallRight2.isFixedRotation = true
 	
-	local roof = display.newImageRect( "BorderWall.png", 975, 20 )
+	local roof = display.newImageRect( "border_wall_final.png", 975, 20 )
 	roof.x, roof.y = -50, 20
 	roof.anchorX = 0
 	roof.anchorY = 1
@@ -2300,7 +2308,7 @@ function scene:create( event )
 	physics.addBody( roof, "static", { density=5.0, friction=0.3, bounce=0.0 } )
 	roof.isFixedRotation = true
 	
-	local roof1 = display.newImageRect( "BorderWall.png", 1090, 20 )
+	local roof1 = display.newImageRect( "border_wall_final.png", 1090, 20 )
 	roof1.x, roof1.y = -50, -237
 	roof1.anchorX = 0
 	roof1.anchorY = 1
@@ -2331,7 +2339,7 @@ function scene:create( event )
 	ladder.anchorY = 1
 	
 	-- create a ground object and add physics (with custom shape)
-	local ground = display.newImageRect( "floor.png", 3000, 82 )
+	local ground = display.newImageRect( "Floor.png", 3000, 82 )
 	ground.anchorX = 0
 	ground.anchorY = 1
 	--  draw the ground at the very bottom of the screen
@@ -2359,7 +2367,7 @@ function scene:create( event )
 	camera:insert( step1 )
 	camera:insert( step2 )
 	camera:insert( enemy )
-	sceneGroup:insert( HUD )
+	sceneGroup:insert( HUDscore )
 	sceneGroup:insert( HUDtime )
 
 end
